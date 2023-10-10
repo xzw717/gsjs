@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>每日工时计算器</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+        }
+
+        .calculator-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+
+        #datePicker,
+        #dailyHours,
+        #monthlyTotal {
+            width: 100%;
+            height: 50px;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #history {
+            width: 100%;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="calculator-container">
+        <h1>每日工时计算器</h1>
+        <label for="datePicker">选择日期：</label><br>
+        <input type="date" id="datePicker"><br><br>
+        <label for="dailyHours">每日工时（0.5小时为单位）：</label><br>
+        <input type="number" id="dailyHours" step="0.5" required><br><br>
+        <button onclick="saveOrUpdateEntry()">保存/更新工时</button><br><br>
+        <label for="monthlyTotal">本月累计工时：</label><br>
+        <input type="text" id="monthlyTotal" disabled><br><br>
+        <div id="history"></div>
+    </div>
+    <script>
+        // 获取当前日期并设置为日期选择器的默认值
+        var today = new Date();
+        var year = today.getFullYear();
+        var month = String(today.getMonth() + 1).padStart(2, '0');
+        var day = String(today.getDate()).padStart(2, '0');
+        var currentDate = year + '-' + month + '-' + day;
+        document.getElementById("datePicker").value = currentDate;
+
+        function saveOrUpdateEntry() {
+            var selectedDate = document.getElementById("datePicker").value;
+            var dailyHours = document.getElementById("dailyHours").value;
+            var dailyHoursFloat = parseFloat(dailyHours) || 0;
+
+            // 保存/更新工时的接口调用
+            fetch('http://localhost:8001/saveWorkHour', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ date: selectedDate, hours: dailyHoursFloat })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // 接收保存/更新工时接口的返回数据（data变量中）
+                    console.log(data.message);
+
+                    // 获取历史记录的接口调用
+                    fetch('http://localhost:8001/getWorkHours')
+                        .then(response => response.json())
+                        .then(history => {
+                            // 在这里处理从后端获取到的历史工时数据（history变量中）
+                            showHistory(history.history);
+                            // 显示本月累计工时
+                            console.log(history);
+                            const monthlyTotalHours = history.totalHours;
+
+                            document.getElementById("monthlyTotal").value = monthlyTotalHours;
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                })
+        }
+
+        // 显示历史记录
+        function showHistory(history) {
+
+            var historyList = document.getElementById("history");
+            historyList.innerHTML = "历史工时记录：<br>";
+            history.forEach(entry => {
+                var dateString = entry.date;
+
+                var hours = entry.hours.toFixed(2);
+                historyList.innerHTML += `日期：${dateString} 工时：${hours} 小时<br>`;
+            });
+        }
+
+
+        // 在页面加载时加载历史工时记录
+        fetch('http://localhost:8001/getWorkHours')
+            .then(response => response.json())
+            .then(dic => {
+                // 在这里处理从后端获取到的历史工时数据（history变量中）
+                showHistory(dic.history);
+
+                const monthlyTotalHours = dic.totalHours;
+
+                document.getElementById("monthlyTotal").value = monthlyTotalHours;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    </script>
+</body>
+
+</html>
