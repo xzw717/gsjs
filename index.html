@@ -67,7 +67,7 @@
             var dailyHoursFloat = parseFloat(dailyHours) || 0;
 
             // 保存/更新工时的接口调用
-            fetch('https://r30417u968.zicp.fun/saveWorkHour', {
+            fetch('http://127.0.0.1:8001/saveWorkHour', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -80,7 +80,7 @@
                     console.log(data.message);
 
                     // 获取历史记录的接口调用
-                    fetch('https://r30417u968.zicp.fun/getWorkHours')
+                    fetch('http://127.0.0.1:8001/getWorkHours')
                         .then(response => response.json())
                         .then(history => {
                             // 在这里处理从后端获取到的历史工时数据（history变量中）
@@ -112,7 +112,7 @@
 
 
         // 在页面加载时加载历史工时记录
-        fetch('https://r30417u968.zicp.fun/getWorkHours')
+        fetch('http://127.0.0.1:8001/getWorkHours')
             .then(response => response.json())
             .then(dic => {
                 // 在这里处理从后端获取到的历史工时数据（history变量中）
